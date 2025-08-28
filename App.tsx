@@ -13,6 +13,9 @@ import { FloatingActionButton } from './components/FloatingActionButton';
 import { ChatIcon } from './components/icons/ChatIcon';
 import type { Chat } from '@google/genai';
 import { ApiKeyInstructions } from './components/ApiKeyInstructions';
+import { SessionManager } from './components/SessionManager';
+
+const STORAGE_KEY = 'feature-prioritization-session';
 
 const App: React.FC = () => {
   const [activeFramework, setActiveFramework] = useState<Framework>(Framework.MoSCoW);
@@ -21,6 +24,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [productConcept, setProductConcept] = useState<string>('a project management tool');
   const [isApiKeyMissing, setIsApiKeyMissing] = useState<boolean>(false);
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
   
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
@@ -28,11 +32,29 @@ const App: React.FC = () => {
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
   const chatSessionRef = useRef<Chat | null>(null);
 
+  useEffect(() => {
+    try {
+      const savedSessionJSON = localStorage.getItem(STORAGE_KEY);
+      if (savedSessionJSON) {
+        const savedSession = JSON.parse(savedSessionJSON);
+        if (savedSession.features && Array.isArray(savedSession.features) && savedSession.productConcept) {
+          setFeatures(savedSession.features);
+          setProductConcept(savedSession.productConcept);
+          setLastSaved(savedSession.lastSaved || null);
+        } else {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load or parse saved session from localStorage", e);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
+
   const initializeChat = useCallback(() => {
     try {
       chatSessionRef.current = startChat(features);
       setChatMessages([]);
-      // If the API key was previously missing but is now available, reset the warning.
       if (isApiKeyMissing) {
         setIsApiKeyMissing(false);
       }
@@ -43,7 +65,6 @@ const App: React.FC = () => {
     }
   }, [features, isApiKeyMissing]);
 
-  // Initialize chat when features change or app loads
   useEffect(() => {
     initializeChat();
   }, [initializeChat]);
@@ -61,11 +82,13 @@ const App: React.FC = () => {
     try {
       const newFeatures = await generateFeatures(productConcept);
       setFeatures(newFeatures);
+      localStorage.removeItem(STORAGE_KEY);
+      setLastSaved(null);
       if (isApiKeyMissing) setIsApiKeyMissing(false);
     } catch (err) {
       if (err instanceof Error && err.message.includes("API_KEY environment variable is not set")) {
         setIsApiKeyMissing(true);
-        setError(null); // Don't show the generic error message as well
+        setError(null);
       } else {
         setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       }
@@ -73,6 +96,29 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const handleSaveSession = useCallback(() => {
+    try {
+        const now = new Date();
+        const sessionData = {
+            features,
+            productConcept,
+            lastSaved: now.toISOString(),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
+        setLastSaved(now.toISOString());
+    } catch (e) {
+        console.error("Failed to save session to localStorage", e);
+        setError("Could not save your session. Your browser's storage might be full or blocked.");
+    }
+  }, [features, productConcept]);
+
+  const handleClearSession = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setFeatures(INITIAL_FEATURES);
+    setProductConcept('a project management tool');
+    setLastSaved(null);
+  }, []);
 
   const handleToggleChat = () => {
     setIsChatOpen(prev => !prev);
@@ -179,6 +225,11 @@ const App: React.FC = () => {
                     </button>
                   </div>
                   {error && <p className="text-red-400 mt-4">{error}</p>}
+                  <SessionManager
+                    onSave={handleSaveSession}
+                    onClear={handleClearSession}
+                    lastSaved={lastSaved}
+                  />
                 </div>
               </Card>
 

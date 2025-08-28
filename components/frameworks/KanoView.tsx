@@ -62,10 +62,10 @@ export const KanoView: React.FC<KanoViewProps> = ({ features, onUpdateFeature })
       <div>
         <h3 className="text-2xl font-bold text-white mb-4">Satisfaction Impact</h3>
         <div className="space-y-4">
-            <CategoryColumn title="Excitement" description="Unexpected features that delight users." features={categorizedFeatures[KanoCategory.Excitement]} bgColor="bg-purple-900/30" textColor="text-purple-300" />
-            <CategoryColumn title="Performance" description="More is better; satisfaction grows with quality." features={categorizedFeatures[KanoCategory.Performance]} bgColor="bg-blue-900/30" textColor="text-blue-300" />
-            <CategoryColumn title="Basic" description="Expected by users; absence causes dissatisfaction." features={categorizedFeatures[KanoCategory.Basic]} bgColor="bg-yellow-900/30" textColor="text-yellow-300" />
-            <CategoryColumn title="Indifferent" description="Absence or presence has little effect." features={categorizedFeatures[KanoCategory.Indifferent]} bgColor="bg-gray-700/30" textColor="text-gray-300" />
+            <CategoryColumn title="Excitement" description="Delightful surprises. Their presence significantly boosts satisfaction." features={categorizedFeatures[KanoCategory.Excitement]} bgColor="bg-purple-900/30" textColor="text-purple-300" />
+            <CategoryColumn title="Performance" description="More is better. Satisfaction increases with the quality of these features." features={categorizedFeatures[KanoCategory.Performance]} bgColor="bg-blue-900/30" textColor="text-blue-300" />
+            <CategoryColumn title="Basic" description="Essential features. Users expect them, and their absence causes dissatisfaction." features={categorizedFeatures[KanoCategory.Basic]} bgColor="bg-yellow-900/30" textColor="text-yellow-300" />
+            <CategoryColumn title="Indifferent" description="Users don't care about these features one way or the other." features={categorizedFeatures[KanoCategory.Indifferent]} bgColor="bg-gray-700/30" textColor="text-gray-300" />
         </div>
       </div>
     </div>
